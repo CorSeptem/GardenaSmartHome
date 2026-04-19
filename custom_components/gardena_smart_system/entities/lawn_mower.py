@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -12,9 +14,14 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from ..const import (
+    ATTR_DURATION,
     DOMAIN,
     MOWER_ACTIVITY_NONE,
     MOWER_ACTIVITY_OK_CHARGING,
@@ -27,7 +34,10 @@ from ..const import (
     MOWER_ACTIVITY_PARKED_TIMER,
     MOWER_ACTIVITY_PAUSED,
     SERVICE_COMMON,
+    SERVICE_DOCK_MOWER,
     SERVICE_MOWER,
+    SERVICE_PAUSE_MOWER,
+    SERVICE_START_MOWING,
 )
 from ..coordinator import GardenaDataCoordinator
 from .base import GardenaEntity
@@ -71,6 +81,25 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
+
+    # Register custom entity services (Actions)
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_START_MOWING,
+        {vol.Optional(ATTR_DURATION): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440))},
+        "async_start_mowing_with_duration",
+    )
+    platform.async_register_entity_service(
+        SERVICE_DOCK_MOWER,
+        {},
+        "async_dock",
+    )
+    platform.async_register_entity_service(
+        SERVICE_PAUSE_MOWER,
+        {},
+        "async_pause",
+    )
 
 
 class GardenaLawnMower(GardenaEntity, LawnMowerEntity):
@@ -123,8 +152,12 @@ class GardenaLawnMower(GardenaEntity, LawnMowerEntity):
         }
 
     async def async_start_mowing(self) -> None:
-        """Start mowing."""
+        """Start mowing (standard HA action, no duration)."""
         await self.coordinator.client.mower_start(self._service_id)
+
+    async def async_start_mowing_with_duration(self, duration: int | None = None) -> None:
+        """Start mowing with optional duration in minutes."""
+        await self.coordinator.client.mower_start(self._service_id, duration=duration)
 
     async def async_dock(self) -> None:
         """Dock the mower."""

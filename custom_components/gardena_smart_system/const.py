@@ -73,3 +73,12 @@ ATTR_STATE = "state"
 ATTR_OPERATING_HOURS = "operating_hours"
 ATTR_LAST_ERROR_CODE = "last_error_code"
 ATTR_DURATION = "duration"
+
+# Custom service/action names
+SERVICE_START_MOWING = "start_mowing"
+SERVICE_DOCK_MOWER = "dock_mower"
+SERVICE_PAUSE_MOWER = "pause_mower"
+SERVICE_OPEN_VALVE = "open_valve"
+SERVICE_CLOSE_VALVE = "close_valve"
+SERVICE_PAUSE_VALVE = "pause_valve"
+SERVICE_UNPAUSE_VALVE = "unpause_valve"

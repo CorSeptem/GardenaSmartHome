@@ -5,6 +5,8 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant.components.valve import (
     ValveDeviceClass,
     ValveEntity,
@@ -12,10 +14,18 @@ from homeassistant.components.valve import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 
 from ..const import (
+    ATTR_DURATION,
     DOMAIN,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
+    SERVICE_PAUSE_VALVE,
+    SERVICE_UNPAUSE_VALVE,
     SERVICE_VALVE,
     VALVE_ACTIVITY_CLOSED,
     VALVE_ACTIVITY_MANUAL_WATERING,
@@ -48,6 +58,30 @@ async def async_setup_entry(
                 )
 
     async_add_entities(entities)
+
+    # Register custom entity services (Actions)
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        SERVICE_OPEN_VALVE,
+        {vol.Optional(ATTR_DURATION, default=30): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440))},
+        "async_open_valve_with_duration",
+    )
+    platform.async_register_entity_service(
+        SERVICE_CLOSE_VALVE,
+        {},
+        "async_close_valve",
+    )
+    platform.async_register_entity_service(
+        SERVICE_PAUSE_VALVE,
+        {},
+        "async_pause_valve",
+    )
+    platform.async_register_entity_service(
+        SERVICE_UNPAUSE_VALVE,
+        {},
+        "async_unpause_valve",
+    )
 
 
 class GardenaValve(GardenaEntity, ValveEntity):
@@ -93,10 +127,21 @@ class GardenaValve(GardenaEntity, ValveEntity):
         }
 
     async def async_open_valve(self, **kwargs: Any) -> None:
-        """Open the valve."""
-        duration = kwargs.get("duration", 30)
+        """Open the valve (standard HA action, default 30 min)."""
+        await self.coordinator.client.valve_open(self._service_id, 30)
+
+    async def async_open_valve_with_duration(self, duration: int = 30) -> None:
+        """Open the valve with a specific duration in minutes."""
         await self.coordinator.client.valve_open(self._service_id, duration)
 
     async def async_close_valve(self, **kwargs: Any) -> None:
         """Close the valve."""
         await self.coordinator.client.valve_close(self._service_id)
+
+    async def async_pause_valve(self, **kwargs: Any) -> None:
+        """Pause the valve schedule."""
+        await self.coordinator.client.valve_pause(self._service_id)
+
+    async def async_unpause_valve(self, **kwargs: Any) -> None:
+        """Unpause the valve schedule."""
+        await self.coordinator.client.valve_unpause(self._service_id)
