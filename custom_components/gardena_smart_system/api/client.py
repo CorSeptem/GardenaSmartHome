@@ -146,7 +146,7 @@ class GardenaClient:
         command = {
             "data": {
                 "type": SERVICE_MOWER_COMMAND,
-                "attributes": {"command": "PAUSE"},
+                "attributes": {"command": "PARK_UNTIL_FURTHER_NOTICE"},
                 "id": f"request-{uuid.uuid4()}",
             }
         }
