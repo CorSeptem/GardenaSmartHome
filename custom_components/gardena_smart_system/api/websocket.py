@@ -11,7 +11,7 @@ from typing import Any, Callable
 
 import aiohttp
 
-from ..const import WS_MAX_RETRIES, WS_RECONNECT_DELAYS
+from ..const import WS_RECONNECT_DELAYS
 from .auth import GardenaAuth
 from .client import GardenaClient
 
@@ -88,40 +88,38 @@ class GardenaWebSocket:
     async def _listen_loop(self) -> None:
         """Main WebSocket listen loop with automatic reconnection.
 
-        Implements exponential backoff: 5s → 10s → 30s → 60s → 60s.
-        This addresses issue #303 - WebSocket not reconnecting.
+        Backoff 5s → 10s → 30s → 60s → 120s → 300s, then every 300s for as
+        long as the integration is loaded. The API closes the socket on
+        purpose every few hours; a longer outage (router restart, ISP hiccup)
+        must not leave the integration permanently without push updates.
         """
         while self._running:
             try:
                 await self._connect_and_listen()
             except asyncio.CancelledError:
                 break
+            except (aiohttp.ClientError, asyncio.TimeoutError, OSError) as err:
+                _LOGGER.warning("WebSocket connection failed: %s", err)
             except Exception:
                 _LOGGER.exception("WebSocket error")
 
             if not self._running:
                 break
 
+            # Notify once per real disconnect, not once per failed retry.
+            was_connected = self._connected
             self._connected = False
-            if self._on_disconnected:
+            if was_connected and self._on_disconnected:
                 self._on_disconnected()
-
-            if self._retry_count >= WS_MAX_RETRIES:
-                _LOGGER.error(
-                    "WebSocket max retries (%d) reached, stopping",
-                    WS_MAX_RETRIES,
-                )
-                break
 
             delay = WS_RECONNECT_DELAYS[
                 min(self._retry_count, len(WS_RECONNECT_DELAYS) - 1)
             ]
             self._retry_count += 1
             _LOGGER.info(
-                "WebSocket reconnecting in %ds (attempt %d/%d)",
+                "WebSocket reconnecting in %ds (attempt %d)",
                 delay,
                 self._retry_count,
-                WS_MAX_RETRIES,
             )
             await asyncio.sleep(delay)
 

@@ -18,6 +18,7 @@ A HACS-compatible Home Assistant custom component for Gardena Smart System API v
 - Fix: simultaneous login error — token passed from config flow to coordinator
 - Fix: `UnitOfIlluminance` replaced with `"lx"` string for HA compatibility
 - Published to HACS (exists in store as `CorSeptem/GardenaSmartHome`)
+- v1.1.5: entity services from services.yaml actually registered (duration support), WebSocket reconnects forever with capped backoff, mower ERROR read from `state` not `activity`, mower pause = PARK_UNTIL_FURTHER_NOTICE
 
 ## What Remains
 - Verify all entity platforms work with real devices

@@ -130,6 +130,17 @@ class GardenaClient:
         }
         return await self.send_command(service_id, command)
 
+    async def mower_resume_schedule(self, service_id: str) -> dict[str, Any]:
+        """Start mowing according to the mower's own schedule."""
+        command = {
+            "data": {
+                "type": SERVICE_MOWER_COMMAND,
+                "attributes": {"command": "START_DONT_OVERRIDE"},
+                "id": f"request-{uuid.uuid4()}",
+            }
+        }
+        return await self.send_command(service_id, command)
+
     async def mower_park(self, service_id: str) -> dict[str, Any]:
         """Park the mower until next schedule."""
         command = {

@@ -15,9 +15,11 @@ COMMAND_URL = "https://api.smart.gardena.dev/v1/command"
 # Token refresh buffer (seconds before expiry)
 TOKEN_REFRESH_BUFFER = 300  # 5 minutes
 
-# WebSocket reconnect settings
-WS_RECONNECT_DELAYS = [5, 10, 30, 60, 60]  # exponential backoff
-WS_MAX_RETRIES = 5
+# WebSocket reconnect settings. Backoff grows to the last value and then
+# stays there — the listener never gives up while the integration is loaded
+# (the API closes the socket on purpose every few hours, and a network outage
+# must not leave the integration silently dead).
+WS_RECONNECT_DELAYS = [5, 10, 30, 60, 120, 300]  # seconds
 
 # Device types
 DEVICE_TYPE_MOWER = "MOWER"
@@ -47,6 +49,12 @@ MOWER_ACTIVITY_PARKED_TIMER = "PARKED_TIMER"
 MOWER_ACTIVITY_PARKED_PARK_SELECTED = "PARKED_PARK_SELECTED"
 MOWER_ACTIVITY_PARKED_AUTOTIMER = "PARKED_AUTOTIMER"
 MOWER_ACTIVITY_NONE = "NONE"
+
+# Mower service "state" (health), separate from "activity"
+MOWER_STATE_OK = "OK"
+MOWER_STATE_WARNING = "WARNING"
+MOWER_STATE_ERROR = "ERROR"
+MOWER_STATE_UNAVAILABLE = "UNAVAILABLE"
 
 # Power socket activities
 POWER_SOCKET_ACTIVITY_OFF = "OFF"

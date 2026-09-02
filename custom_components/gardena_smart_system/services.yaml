@@ -1,6 +1,6 @@
 start_mowing:
   name: Start Mowing
-  description: Start the mower for a specified duration or resume schedule.
+  description: Start the mower for a specified duration. Without a duration the mower starts according to its own schedule.
   target:
     entity:
       domain: lawn_mower
@@ -8,7 +8,7 @@ start_mowing:
   fields:
     duration:
       name: Duration
-      description: Duration in minutes. If omitted, resumes schedule.
+      description: Duration in minutes. If omitted, the mower follows its schedule (START_DONT_OVERRIDE).
       required: false
       selector:
         number:
@@ -26,7 +26,7 @@ dock_mower:
 
 pause_mower:
   name: Pause Mower
-  description: Pause the mower.
+  description: Park the mower until further notice (the API has no pause command).
   target:
     entity:
       domain: lawn_mower
@@ -34,7 +34,7 @@ pause_mower:
 
 open_valve:
   name: Open Valve
-  description: Open a valve for a specified duration.
+  description: Open a valve for a specified duration (manual watering).
   target:
     entity:
       domain: valve

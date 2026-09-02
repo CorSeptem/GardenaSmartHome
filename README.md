@@ -49,6 +49,28 @@ A modern Home Assistant custom component for the Gardena Smart System API v2.
 | Soil Sensor | `sensor` | temperature, humidity, light | — |
 | Gateway | `binary_sensor` | online/offline | — |
 
+## Actions
+
+Besides the standard `lawn_mower.*` and `valve.*` actions, the integration registers
+its own actions with a `duration` parameter (minutes):
+
+| Action | Target | Notes |
+|--------|--------|-------|
+| `gardena_smart_system.start_mowing` | `lawn_mower` | `duration` optional; without it the mower follows its own schedule |
+| `gardena_smart_system.dock_mower` | `lawn_mower` | Park until next scheduled task |
+| `gardena_smart_system.pause_mower` | `lawn_mower` | Park until further notice (the API has no pause) |
+| `gardena_smart_system.open_valve` | `valve` | `duration` optional, default 30 |
+| `gardena_smart_system.close_valve` | `valve` | Stop until next scheduled task |
+| `gardena_smart_system.pause_valve` / `unpause_valve` | `valve` | Pause / resume an active watering |
+
+```yaml
+action: gardena_smart_system.open_valve
+target:
+  entity_id: valve.stora_grasmattan
+data:
+  duration: 90
+```
+
 ## Architecture
 
 - **No external dependencies** — uses only `aiohttp` (built into HA)
